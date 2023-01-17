@@ -3,10 +3,10 @@ This Python Script allows you to create custom network packages using Scapy. You
 
 This is a dynamic script and might be updated from time-to-time.
 
-#Dependencies:
->Python3
->Scapy (pip3 install Scapy)
->>BinAscii (build in)
+**Dependencies:**
+- Python3
+- Scapy (pip3 install Scapy)
+- BinAscii (build in)
 
-#Like to say thanks? 
+**Like to say thanks?**
 Please visit https://jarnobaselier.nl/ and find all the chanels and methods to say thank you!
