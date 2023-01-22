@@ -26,12 +26,12 @@ manual_layer_4 = 0 #TCP / UDP
 manual_layer_raw = 1
 
 #Source / Destination variables
-source_ip = '192.168.178.30'
-destination_ip = '192.168.178.143'
+source_ip = '10.10.10.10'
+destination_ip = '10.10.10.10'
 source_port = 'iso_tsap'
 destination_port = 36545
-source_mac = '8c:f3:19:03:e4:b3' #PLC
-destination_mac = '8c:f3:19:00:a6:de' #HMI
+source_mac = 'aa:bb:cc:dd:ee:ff' #PLC
+destination_mac = 'aa:bb:cc:dd:ee:ff' #HMI
 send_interface = "Ethernet 2"
 
 #Select if you want to loop the packet. 1 = yes and 0 = no
@@ -48,7 +48,7 @@ sniffing = 0
 nr_of_packets_to_sniff = 1
 #Store sniffed packets if sniffing is on. 1 = yes and 0 = no
 store_sniffed_packets = 1
-store_location = "C:\\Users\\Redux Gamer\\Desktop\\sniffed_packages.pcap"
+store_location = "sniffed_packages.pcap"
 
 
 ######## FUNCTIONS ########
@@ -160,39 +160,21 @@ profinet_block_dcpblocklength = int_to_bytes_2(14)
 profinet_block_blockqualifier = int_to_bytes_2(1)
 #profinet_namestation = string_to_bytes("jarno")
 #Give IP
-profinet_ip1 = int_to_bytes_1(192)
-profinet_ip2 = int_to_bytes_1(168)
-profinet_ip3 = int_to_bytes_1(178)
-profinet_ip4 = int_to_bytes_1(143)
+profinet_ip1 = int_to_bytes_1(10)
+profinet_ip2 = int_to_bytes_1(10)
+profinet_ip3 = int_to_bytes_1(10)
+profinet_ip4 = int_to_bytes_1(1)
 profinet_subnet1 = int_to_bytes_1(255)
 profinet_subnet2 = int_to_bytes_1(255)
 profinet_subnet3 = int_to_bytes_1(255)
 profinet_subnet4 = int_to_bytes_1(0)
-profinet_gateway1 = int_to_bytes_1(192)
-profinet_gateway2 = int_to_bytes_1(168)
-profinet_gateway3 = int_to_bytes_1(178)
-profinet_gateway4 = int_to_bytes_1(1)
+profinet_gateway1 = int_to_bytes_1(10)
+profinet_gateway2 = int_to_bytes_1(10)
+profinet_gateway3 = int_to_bytes_1(10)
+profinet_gateway4 = int_to_bytes_1(254)
 
 #Compile Raw part of Profinet package
 Profinet = profinet_frameid + profinet_serviceId + profinet_serviceType + profinet_xid_1 + profinet_xid_2 + profinet_xid_3 + profinet_xid_4 + profinet_reserved + profinet_dcpdatalength + profinet_block_option_control + profinet_block_suboption_signal + profinet_block_dcpblocklength + profinet_block_blockqualifier + profinet_ip1 + profinet_ip2 + profinet_ip3 + profinet_ip4 + profinet_subnet1 + profinet_subnet2 + profinet_subnet3 + profinet_subnet4 + profinet_gateway1 + profinet_gateway2 + profinet_gateway3 + profinet_gateway4
-
-
-#EXAMPLE - DCP IDENTIFY DEVICES
-profinet_frameid = int_to_bytes_2(65278)
-profinet_serviceId = int_to_bytes_1(5)
-profinet_serviceType = int_to_bytes_1(0)
-profinet_xid_1 = int_to_bytes_1(0)
-profinet_xid_2 = int_to_bytes_1(0)
-profinet_xid_3 = int_to_bytes_1(0)
-profinet_xid_4 = int_to_bytes_1(3)
-profinet_reserved = int_to_bytes_2(1)
-profinet_dcpdatalength = int_to_bytes_2(4)
-profinet_block_option_control = int_to_bytes_1(255)
-profinet_block_suboption_signal = int_to_bytes_1(255)
-profinet_block_dcpblocklength = int_to_bytes_2(0)
-
-#Compile Raw part of Profinet package
-Profinet = profinet_frameid + profinet_serviceId + profinet_serviceType + profinet_xid_1 + profinet_xid_2 + profinet_xid_3 + profinet_xid_4 + profinet_reserved + profinet_dcpdatalength + profinet_block_option_control + profinet_block_suboption_signal + profinet_block_dcpblocklength
 
 """
 
