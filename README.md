@@ -6,6 +6,7 @@ This is a dynamic script and might be updated from time-to-time.
 **Dependencies:**
 - Python3
 - Scapy (pip3 install Scapy)
+- Threading (build in)
 - BinAscii (build in)
 
 **Like to say thanks?**
