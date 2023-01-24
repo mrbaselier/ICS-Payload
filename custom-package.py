@@ -18,20 +18,21 @@ import time
 ######## SETTINGS / VARIABLES ########
 #Setting variables
 #This setting is to specify the layer where the package is send from. Options are "layer1 & layer3"
-layer = "layer1"
+layer = "layer3"
 
 #Set layer to 1 if you want to manually control it. If 0 then the computer calculates this layer
+manual_layer_1 = 0 #Ethernet
 manual_layer_3 = 0 #IP / ICMP / ARP
 manual_layer_4 = 0 #TCP / UDP
 manual_layer_raw = 1
 
 #Source / Destination variables
-source_ip = '10.10.10.10'
-destination_ip = '10.10.10.10'
-source_port = 'iso_tsap'
-destination_port = 36545
-source_mac = 'aa:bb:cc:dd:ee:ff' #PLC
-destination_mac = 'aa:bb:cc:dd:ee:ff' #HMI
+source_ip = '192.168.178.143'
+destination_ip = '192.168.178.30'
+source_port = 50022
+destination_port = 102
+source_mac = '8c:f3:19:00:a6:de' #HMI
+destination_mac = '8c:f3:19:03:e4:b3' #PLC
 send_interface = "Ethernet 2"
 
 #Select if you want to loop the packet. 1 = yes and 0 = no
@@ -48,7 +49,7 @@ sniffing = 0
 nr_of_packets_to_sniff = 1
 #Store sniffed packets if sniffing is on. 1 = yes and 0 = no
 store_sniffed_packets = 1
-store_location = "sniffed_packages.pcap"
+store_location = "C:\\Users\\Redux Gamer\\Desktop\\sniffed_packages.pcap"
 
 
 ######## FUNCTIONS ########
@@ -160,21 +161,39 @@ profinet_block_dcpblocklength = int_to_bytes_2(14)
 profinet_block_blockqualifier = int_to_bytes_2(1)
 #profinet_namestation = string_to_bytes("jarno")
 #Give IP
-profinet_ip1 = int_to_bytes_1(10)
-profinet_ip2 = int_to_bytes_1(10)
-profinet_ip3 = int_to_bytes_1(10)
-profinet_ip4 = int_to_bytes_1(1)
+profinet_ip1 = int_to_bytes_1(192)
+profinet_ip2 = int_to_bytes_1(168)
+profinet_ip3 = int_to_bytes_1(178)
+profinet_ip4 = int_to_bytes_1(143)
 profinet_subnet1 = int_to_bytes_1(255)
 profinet_subnet2 = int_to_bytes_1(255)
 profinet_subnet3 = int_to_bytes_1(255)
 profinet_subnet4 = int_to_bytes_1(0)
-profinet_gateway1 = int_to_bytes_1(10)
-profinet_gateway2 = int_to_bytes_1(10)
-profinet_gateway3 = int_to_bytes_1(10)
-profinet_gateway4 = int_to_bytes_1(254)
+profinet_gateway1 = int_to_bytes_1(192)
+profinet_gateway2 = int_to_bytes_1(168)
+profinet_gateway3 = int_to_bytes_1(178)
+profinet_gateway4 = int_to_bytes_1(1)
 
 #Compile Raw part of Profinet package
 Profinet = profinet_frameid + profinet_serviceId + profinet_serviceType + profinet_xid_1 + profinet_xid_2 + profinet_xid_3 + profinet_xid_4 + profinet_reserved + profinet_dcpdatalength + profinet_block_option_control + profinet_block_suboption_signal + profinet_block_dcpblocklength + profinet_block_blockqualifier + profinet_ip1 + profinet_ip2 + profinet_ip3 + profinet_ip4 + profinet_subnet1 + profinet_subnet2 + profinet_subnet3 + profinet_subnet4 + profinet_gateway1 + profinet_gateway2 + profinet_gateway3 + profinet_gateway4
+
+
+#EXAMPLE - DCP IDENTIFY DEVICES
+profinet_frameid = int_to_bytes_2(65278)
+profinet_serviceId = int_to_bytes_1(5)
+profinet_serviceType = int_to_bytes_1(0)
+profinet_xid_1 = int_to_bytes_1(0)
+profinet_xid_2 = int_to_bytes_1(0)
+profinet_xid_3 = int_to_bytes_1(0)
+profinet_xid_4 = int_to_bytes_1(3)
+profinet_reserved = int_to_bytes_2(1)
+profinet_dcpdatalength = int_to_bytes_2(4)
+profinet_block_option_control = int_to_bytes_1(255)
+profinet_block_suboption_signal = int_to_bytes_1(255)
+profinet_block_dcpblocklength = int_to_bytes_2(0)
+
+#Compile Raw part of Profinet package
+Profinet = profinet_frameid + profinet_serviceId + profinet_serviceType + profinet_xid_1 + profinet_xid_2 + profinet_xid_3 + profinet_xid_4 + profinet_reserved + profinet_dcpdatalength + profinet_block_option_control + profinet_block_suboption_signal + profinet_block_dcpblocklength
 
 """
 
@@ -190,20 +209,20 @@ Profinet = profinet_frameid + profinet_serviceId + profinet_serviceType + profin
 #fefd = 65277 decimal = Profinet acyclic, DCP - GET_SET
 #fefe = 65278 decimal = Profinet acyclic, DCP - Identify request
 #fefe = 65278 decimal = Profinet acyclic, DCP - IIdentify response
-profinet_frameid = int_to_bytes_2(65278) #The Frame ID identifies what kind of frame this is. For any “Identify request” (see the next two fields) it needs to be set to 0xfefe, and for any “Identify response” to 0xfeff. fefd = Profinet acyclic, DCP - GET_SET
+profinet_frameid = int_to_bytes_2(65277) #The Frame ID identifies what kind of frame this is. For any “Identify request” (see the next two fields) it needs to be set to 0xfefe, and for any “Identify response” to 0xfeff. fefd = Profinet acyclic, DCP - GET_SET
 #ServiceID defines the action on the specific device
-profinet_serviceId = int_to_bytes_1(5)
+profinet_serviceId = int_to_bytes_1(4)
 #0 = request response (request) -  1 = Response Success (answer)
 profinet_serviceType = int_to_bytes_1(0)
 #profinet_xid is usually not important to controll the hardware. The Xid is a 32-bit random number which identifies this request. All responses need to contain the same ID for the receiver to figure out which request the just received response belongs to as there is no such thing as a connection on Ethernet Layer 2.
 profinet_xid_1 = int_to_bytes_1(0)
 profinet_xid_2 = int_to_bytes_1(0)
-profinet_xid_3 = int_to_bytes_1(0)
-profinet_xid_4 = int_to_bytes_1(3)
+profinet_xid_3 = int_to_bytes_1(21)
+profinet_xid_4 = int_to_bytes_1(18)
 #profinet_reserved is usually not important to controll the hardware
-profinet_reserved = int_to_bytes_2(1)
+profinet_reserved = int_to_bytes_2(0)
 #dcpdatalength defines the size of the Data block. Profinet DCP runs via “Profinet acyclic realtime”.
-profinet_dcpdatalength = int_to_bytes_2(4)
+profinet_dcpdatalength = int_to_bytes_2(8)
 #DATA BLOCK / CONTROL SIGNAL BLOCK
 #https://rt-labs.com/docs/p-net/profinet_details.html
 #Option and Suboption define the action to take. Note, this is in combination with the serviceID
@@ -227,10 +246,10 @@ Filter only     2       6               Alias name
 5               255     255             All     
 6               6       1               Device initiative       Issues Hello at power on
 """
-profinet_block_option_control = int_to_bytes_1(255)
-profinet_block_suboption_signal = int_to_bytes_1(255)
+profinet_block_option_control = int_to_bytes_1(5)
+profinet_block_suboption_signal = int_to_bytes_1(3)
 #Defines the size of the upcoming block
-profinet_block_dcpblocklength = int_to_bytes_2(0)
+profinet_block_dcpblocklength = int_to_bytes_2(4)
 
 #Use option when needed. When not needed, keep commented-out
 #0 = Save value temporary - 1 = Save value permanently
@@ -254,8 +273,13 @@ profinet_block_dcpblocklength = int_to_bytes_2(0)
 #profinet_gateway3 = int_to_bytes_1(178)
 #profinet_gateway4 = int_to_bytes_1(1)
 
+#SignalValues / Blink Screen
+profinet_block_blockqualifier = int_to_bytes_2(0)
+profinet_block_signalvalue_1 =int_to_bytes_1(1)
+profinet_block_signalvalue_2 =int_to_bytes_1(0)
+
 #Compile Raw part of Profinet package
-Profinet = profinet_frameid + profinet_serviceId + profinet_serviceType + profinet_xid_1 + profinet_xid_2 + profinet_xid_3 + profinet_xid_4 + profinet_reserved + profinet_dcpdatalength + profinet_block_option_control + profinet_block_suboption_signal + profinet_block_dcpblocklength
+Profinet = profinet_frameid + profinet_serviceId + profinet_serviceType + profinet_xid_1 + profinet_xid_2 + profinet_xid_3 + profinet_xid_4 + profinet_reserved + profinet_dcpdatalength + profinet_block_option_control + profinet_block_suboption_signal + profinet_block_dcpblocklength + profinet_block_blockqualifier + profinet_block_signalvalue_1 + profinet_block_signalvalue_2
 
 #=========================================================
 #TPKT
@@ -344,19 +368,20 @@ SiemensS7 = s7_protocol_id + s7_rosctr + s7_red_id_pt1 + s7_red_id_pt2 + s7_prot
 ######## DEFINE THE CUSTOM PAYLOAD (RAW PACKAGE) ########
 
 #Payload - Define what protocol to send as raw data
-payload = Profinet #+ TPKT + ISO_8073 + SiemensS7
+payload =  TPKT + ISO_8073 + SiemensS7 #Profinet 
 
 
 ######## REGULAR PACKET LAYERS (NONRAW) ########
 
-#Ethernet
+"""
+#BASIC VALUES (in case of deletion)
 l1 = Ether(dst=destination_mac,
         src=source_mac,
         #Profinet = 0x8892 (34962 in decimal) - Note that “Profinet cyclic realtime” and “Profinet acyclic realtime” run directly on Ethernet layer 2 (they do not use IP or UDP), so no manual l2 or l3.
         type=34962
      )
 #IP
-l2 = IP(version=4, 
+l3 = IP(version=4, 
         ihl=5,
         tos=0x0,
         len=62,
@@ -370,7 +395,42 @@ l2 = IP(version=4,
         dst=destination_ip
      )
 #TCP
-l3 = TCP(sport=source_port,
+l4 = TCP(sport=source_port,
+        dport=destination_port,
+        seq=19179,
+        ack=1416649709,
+        dataofs=5,
+        reserved=0,
+        flags='PA',
+        window=3150,
+        chksum=0x9cba,
+        urgptr=0,
+        options=[]
+     )
+"""
+
+#Ethernet
+l1 = Ether(dst=destination_mac,
+        src=source_mac,
+        #Profinet = 0x8892 (34962 in decimal) - Note that “Profinet cyclic realtime” and “Profinet acyclic realtime” run directly on Ethernet layer 2 (they do not use IP or UDP), so no manual l2 or l3.
+        type=34962
+     )
+#IP
+l3 = IP(version=4, 
+        ihl=5,
+        tos=0x0,
+        len=62,
+        id=231,
+        flags='',
+        frag=0,
+        ttl=255,
+        proto='tcp',
+        chksum=0xd4d3,
+        src=source_ip,
+        dst=destination_ip
+     )
+#TCP
+l4 = TCP(sport=source_port,
         dport=destination_port,
         seq=19179,
         ack=1416649709,
@@ -388,30 +448,30 @@ lRaw = raw = Raw(load = payload)
 
 ######## PACKET CONSTRUCTION ########
 if layer == "layer1" and manual_layer_3 == 1 and manual_layer_4 == 1 and manual_layer_raw == 1:
-        packet = l1 / l2 / l3 / lRaw
+        packet = l1 / l3 / l4 / lRaw
 if layer == "layer1" and manual_layer_3 == 1 and manual_layer_4 == 0 and manual_layer_raw == 1:
-        packet = l1 / l2 / lRaw
-if layer == "layer1" and manual_layer_3 == 1 and manual_layer_4 == 1 and manual_layer_raw == 0:
-        packet = l1 / l2 / l3
-if layer == "layer1" and manual_layer_3 == 1 and manual_layer_4 == 0 and manual_layer_raw == 0:
-        packet = l1 / l2
-if layer == "layer1" and manual_layer_3 == 0 and manual_layer_4 == 1 and manual_layer_raw == 1:
         packet = l1 / l3 / lRaw
+if layer == "layer1" and manual_layer_3 == 1 and manual_layer_4 == 1 and manual_layer_raw == 0:
+        packet = l1 / l3 / l4
+if layer == "layer1" and manual_layer_3 == 1 and manual_layer_4 == 0 and manual_layer_raw == 0:
+        packet = l1 / l3
+if layer == "layer1" and manual_layer_3 == 0 and manual_layer_4 == 1 and manual_layer_raw == 1:
+        packet = l1 / l4 / lRaw
 if layer == "layer1" and manual_layer_3 == 0 and manual_layer_4 == 0 and manual_layer_raw == 1:
         packet = l1 / lRaw
 if layer == "layer1" and manual_layer_3 == 0 and manual_layer_4 == 1 and manual_layer_raw == 0:
-        packet = l1/ l3
+        packet = l1/ l4
 if layer == "layer1" and manual_layer_3 == 0 and manual_layer_4 == 0 and manual_layer_raw == 0:
         packet = l1
 
 if layer == "layer3" and manual_layer_4 == 1 and manual_layer_raw == 1:
-        packet = l2 / l3 / lRaw
+        packet = l3 / l4 / lRaw
 if layer == "layer3" and manual_layer_4 == 1 and manual_layer_raw == 0:
-        packet = l2 / l3
+        packet = l3 / l4
 if layer == "layer3" and manual_layer_4 == 0 and manual_layer_raw == 1:
-        packet = l2 / lRaw
+        packet = l3 / lRaw
 if layer == "layer3" and manual_layer_4 == 0 and manual_layer_raw == 0:
-        packet = l2
+        packet = l3
 
 
 ######## SHOW AND SEND PACKET(S) ########
