@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 
+
 ######## COPYRIGHT ########
 # Copyright 2023 Jarno Baselier. All rights reserved.
 # This software may be modified and distributed under the terms
@@ -14,6 +15,7 @@ import struct
 import binascii
 import threading
 import time
+
 
 
 ######## SETTINGS / VARIABLES ########
@@ -54,6 +56,7 @@ store_sniffed_packets = 1
 store_location = "C:\\Users\\Redux Gamer\\Desktop\\sniffed_packages.pcap"
 
 
+
 ######## FUNCTIONS ########
 def string_to_bytes(value):
         value = str.encode(value)
@@ -76,9 +79,12 @@ def int_to_bytes_4(value):
         return value
 
 
+
 ######## PAYLOAD SPECIFICATION ########
 
 ### Note, payloads are generated as RAW bytes in the "lRaw" layer
+
+
 
 #=========================================================
 #PROFINET
