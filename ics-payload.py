@@ -83,6 +83,8 @@ def int_to_bytes_4(value):
 #=========================================================
 #PROFINET
 #https://github.com/rtlabs-com/p-net/blob/master/doc/profinet_basics.rst
+#https://rt-labs.com/docs/p-net/profinet_details.html
+
 
 """
 ### = Profinet EXAMPLES = ###
@@ -202,8 +204,6 @@ Profinet = profinet_frameid + profinet_serviceId + profinet_serviceType + profin
 """
 
 
-
-#https://rt-labs.com/docs/p-net/profinet_details.html
 #FrameID values:
 #8000 = 32768 decimal = Profinet cyclic - Output CR
 #8001 = 32769 decimal = Profinet cyclic - Input CR
@@ -285,6 +285,8 @@ profinet_block_signalvalue_2 =int_to_bytes_1(0)
 #Compile Raw part of Profinet package
 Profinet = profinet_frameid + profinet_serviceId + profinet_serviceType + profinet_xid_1 + profinet_xid_2 + profinet_xid_3 + profinet_xid_4 + profinet_reserved + profinet_dcpdatalength + profinet_block_option_control + profinet_block_suboption_signal + profinet_block_dcpblocklength + profinet_block_blockqualifier + profinet_block_signalvalue_1 + profinet_block_signalvalue_2
 
+
+
 #=========================================================
 #TPKT
 #TPKT is officially defined as "ISO Transport Service on top of the TCP." "TCP" and "ISO" relate to two rival suites of networking protocols. TPKT enables translation between these two groups.
@@ -300,6 +302,7 @@ tpkt_length = int_to_bytes_2(22)
 TPKT = tpkt_version + tpkt_reserved + tpkt_length
 
 
+
 #=========================================================
 #ISO_8073 / Connection Oriented Transport Protocol / COTP
 #COTP uses CLNP as its underlying network protocol.
@@ -309,6 +312,7 @@ TPKT = tpkt_version + tpkt_reserved + tpkt_length
 #The values might be lower than in the request, but never higher.
 
 #https://www.wireshark.org/docs/dfref/c/cotp.html
+
 #ISO Size
 iso_length = int_to_bytes_1(2)
 #Protocol Data Unit Type DT (240) / ER / CR (224)
@@ -347,6 +351,7 @@ iso_tpdu_size = int_to_bytes_1(10)
 ISO_8073 = iso_length + iso_pdu_type + iso_tpdu_number + iso_dest_ref + iso_src_ref + iso_class + iso_parameter_code + iso_parameter_length + iso_source_tsap1 + iso_source_tsap2 + iso_parameter_code2 + iso_parameter_length2 + iso_dest_tsap1 + iso_dest_tsap2 + iso_parameter_code3 + iso_parameter_length3 + iso_tpdu_size
 
 
+
 #=========================================================
 #SiemansS7
 #https://packages.zeek.org/packages/view/ae81d07d-389a-11ed-ba82-0a598146b5c6
@@ -367,6 +372,7 @@ ISO_8073 = iso_length + iso_pdu_type + iso_tpdu_number + iso_dest_ref + iso_src_
 #COTP: ISO 8073 COTP Connection-Oriented Transport Protocol (spec. available as RFC905)
 #TPKT: RFC1006 "ISO transport services on top of the TCP: Version 3", updated by RFC2126
 #TCP: Typically, TPKT uses TCP as its transport protocol. The well known TCP port for TPKT traffic is 102. Keep in mind a 3-way handshake is needed before communication takes place. To start communicating commands an S7COMM "Setup Communication" command must be negotiated as well before sending commands.
+
 
 """
 ### = Step7 EXAMPLES = ###
@@ -510,6 +516,7 @@ s7_address_pt3 = int_to_bytes_1(0)
 SiemensS7 = s7_protocol_id + s7_rosctr + s7_red_id + s7_protocol_dataunit_ref + s7_param_length_pt1 + s7_param_length_pt2 + s7_data_length_pt1 + s7_data_length_pt2 + s7_function + s7_item_count + s7_variable_specification + s7_length_next + s7_syntaxid + s7_transportsize + s7_length_next_address_spec + s7_db_nr + s7_area_data_blocks + s7_address_pt1 + s7_address_pt2 + s7_address_pt3
 """
 
+
 #Header
 #Protocol (S7) identifier
 s7_protocol_id = int_to_bytes_1(50)
@@ -648,16 +655,19 @@ s7_address_pt2 = int_to_bytes_1(0)
 s7_address_pt3 = int_to_bytes_1(0)
 """
 
-
 #Compile Raw part of the Siemens S7 package
 SiemensS7 = s7_protocol_id + s7_rosctr + s7_red_id + s7_protocol_dataunit_ref + s7_param_length_pt1 + s7_param_length_pt2 + s7_data_length_pt1 + s7_data_length_pt2 + s7_function + s7_reserved + s7_max_amq_calling + s7_max_amq_called + s7_pdu_length#+ s7_item_count + s7_variable_specification + s7_length_next + s7_syntaxid + s7_transportsize + s7_length_next_address_spec + s7_db_nr + s7_area_data_blocks + s7_address_pt1 + s7_address_pt2 + s7_address_pt3 + s7_return_code + s7_transport_size + s7_item_length + s7_item_data
+
+
 
 ######## DEFINE THE CUSTOM PAYLOAD (RAW PACKAGE) ########
 
 #Payload - Define what protocol to send as raw data
 payload =  TPKT + ISO_8073 + SiemensS7 #Profinet 
 
-######## REGULAR PACKET LAYERS (NONRAW) ########
+
+
+######## REGULAR PACKET LAYERS (NON-RAW) ########
 
 """
 #BASIC VALUES (in case of deletion)
@@ -728,6 +738,7 @@ l4 = TCP(sport=source_port,
 lRaw = raw = Raw(load = payload)
 
 
+
 ######## PACKET CONSTRUCTION ########
 if layer == "layer1" and manual_layer_3 == 1 and manual_layer_4 == 1 and manual_layer_raw == 1:
         packet = l1 / l3 / l4 / lRaw
@@ -754,6 +765,7 @@ if layer == "layer3" and manual_layer_4 == 0 and manual_layer_raw == 1:
         packet = l3 / lRaw
 if layer == "layer3" and manual_layer_4 == 0 and manual_layer_raw == 0:
         packet = l3
+
 
 
 ######## SHOW AND SEND PACKET(S) ########
@@ -795,6 +807,7 @@ if layer == "layer3" and loop == 1:
                 send((packet),iface=send_interface, loop=1)
                 
 
+
 ######## PACKET SNIFFING ########
 def customSniffAction(packet):
         packet.show2()
@@ -805,5 +818,3 @@ if sniffing == 1:
 
         if store_sniffed_packets == 1:
                 wrpcap(store_location, capture)
-
-
