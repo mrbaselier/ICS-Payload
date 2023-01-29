@@ -6,6 +6,7 @@
 # This software may be modified and distributed under the terms
 # of the "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0) license. https://creativecommons.org/licenses/by-nc-sa/4.0/.
 
+#This file act as a master file for defining all kinds of different ICC protocol packet segments and some explanation. This file is not constructed to deal with the 3-way handshake. Look for case-specific examples in this repo if you need an example on how to use this knowledge in combination with different scenarios.
 
 ######## IMPORTS ########
 from scapy.all import *
@@ -18,18 +19,19 @@ import time
 ######## SETTINGS / VARIABLES ########
 #Setting variables
 #This setting is to specify the layer where the package is send from. Options are "layer1 & layer3"
-layer = "layer3"
+layer = "layer1"
 
 #Set layer to 1 if you want to manually control it. If 0 then the computer calculates this layer
-manual_layer_1 = 0 #Ethernet
-manual_layer_3 = 0 #IP / ICMP / ARP
-manual_layer_4 = 0 #TCP / UDP
+manual_layer_1 = 1 #Ethernet
+manual_layer_3 = 1 #IP / ICMP / ARP
+manual_layer_4 = 1 #TCP / UDP
 manual_layer_raw = 1
 
 #Source / Destination variables
-source_ip = '192.168.178.143'
+#randomize ports: random.randint(20000,50000)
+source_ip = '192.168.178.57'
 destination_ip = '192.168.178.30'
-source_port = 50022
+source_port = random.randint(20000,50000)
 destination_port = 102
 source_mac = '8c:f3:19:00:a6:de' #HMI
 destination_mac = '8c:f3:19:03:e4:b3' #PLC
@@ -83,6 +85,8 @@ def int_to_bytes_4(value):
 #https://github.com/rtlabs-com/p-net/blob/master/doc/profinet_basics.rst
 
 """
+### = Profinet EXAMPLES = ###
+
 #EXAMPLE - Blink HMI screen
 profinet_frameid = int_to_bytes_2(65277) #fefd Hex
 profinet_serviceId = int_to_bytes_1(4)
@@ -290,12 +294,10 @@ Profinet = profinet_frameid + profinet_serviceId + profinet_serviceType + profin
 tpkt_version = int_to_bytes_1(3)
 #Reserved is always 0 and is ignored
 tpkt_reserved = int_to_bytes_1(0)
-tpkt_spacer = int_to_bytes_1(0)
-#Length of the data incl. the TPKT packet. So for instance TPKT + ISO + SiemensS7 = length of this field.
-tpkt_length = int_to_bytes_1(22)
+tpkt_length = int_to_bytes_2(22)
 
 #Compile Raw part of the TPKT package
-TPKT = tpkt_version + tpkt_reserved + tpkt_spacer + tpkt_length
+TPKT = tpkt_version + tpkt_reserved + tpkt_length
 
 
 #=========================================================
@@ -309,18 +311,49 @@ TPKT = tpkt_version + tpkt_reserved + tpkt_spacer + tpkt_length
 #https://www.wireshark.org/docs/dfref/c/cotp.html
 #ISO Size
 iso_length = int_to_bytes_1(2)
+#Protocol Data Unit Type DT (240) / ER / CR (224)
 iso_pdu_type = int_to_bytes_1(240)
 #Indicates  the  order in which the DT TPDU was transmitted by a transport entity.
 iso_tpdu_number = int_to_bytes_1(128)
+#This field has a few uses and is mostly used to identify the transport connection.
+iso_dest_ref = int_to_bytes_2(0)
+#Reference selected  by  the  transport  entity initiating   the   CR  TPDU  to  identify  the requested transport connection;
+iso_src_ref = int_to_bytes_2(10)
+#Bits 8-5 of octet 7 defines the preferred OPTION: transport protocol class to be  operated  over the   requested  transport  connection. This field shall take one of the following values:
+#0000  Class 0 - 0001 Class 1 - 0010  Class 2 - 0011  Class 3 - 0100  Class 4
+iso_class = int_to_bytes_1(0)
+#1100 0001 (c1 / 193) for  the  identifier  of  the Calling TSAP (Transport Service Access Point). 1100 0010 (c2 / 194) for  the  identifier  of  the Called TSAP.
+iso_parameter_code = int_to_bytes_1(193)
+#Lengt of next parameter
+iso_parameter_length = int_to_bytes_1(2)
+#Transport Service Access Point ID
+iso_source_tsap1 = int_to_bytes_1(2)
+iso_source_tsap2 = int_to_bytes_1(0)
+#1100 0001 (c1 / 193) for  the  identifier  of  the Calling TSAP (Transport Service Access Point). 1100 0010 (c2 / 194) for  the  identifier  of  the Called TSAP.
+iso_parameter_code2 = int_to_bytes_1(194)
+#Lengt of next parameter
+iso_parameter_length2 = int_to_bytes_1(2)
+#Transport Service Access Point ID
+iso_dest_tsap1 = int_to_bytes_1(2)
+iso_dest_tsap2 = int_to_bytes_1(0)
+#1100 0001 (c1 / 193) for  the  identifier  of  the Calling TSAP (Transport Service Access Point). 1100 0010 (c2 / 194) for  the  identifier  of  the Called TSAP.
+iso_parameter_code3 = int_to_bytes_1(192)
+#Lengt of next parameter
+iso_parameter_length3 = int_to_bytes_1(1)
+#Proposed TPDU (Transaction Protocol Data Unit) Size
+iso_tpdu_size = int_to_bytes_1(10)
 
 #Compile Raw part of ISO_8073 package
-ISO_8073 = iso_length + iso_pdu_type + iso_tpdu_number
+ISO_8073 = iso_length + iso_pdu_type + iso_tpdu_number + iso_dest_ref + iso_src_ref + iso_class + iso_parameter_code + iso_parameter_length + iso_source_tsap1 + iso_source_tsap2 + iso_parameter_code2 + iso_parameter_length2 + iso_dest_tsap1 + iso_dest_tsap2 + iso_parameter_code3 + iso_parameter_length3 + iso_tpdu_size
 
 
 #=========================================================
 #SiemansS7
 #https://packages.zeek.org/packages/view/ae81d07d-389a-11ed-ba82-0a598146b5c6
+#http://gmiru.com/article/s7comm/
 #http://gmiru.com/article/s7comm-part2/
+#http://gmiru.com/resources/s7proto/constants.txt
+#https://github.com/gymgit/s7-pcaps
 
 #Special communication processors for the S7-400 series (CP 443) may use this protocol without the TCP/IP layers.
 #The protocol is used by Siemens since the Simatic S7 product series was launched in 1994. The protocol is also used on top of other physical/network layers, like RS-485 with MPI (Multi-Point-Interface) or Profibus.
@@ -333,23 +366,238 @@ ISO_8073 = iso_length + iso_pdu_type + iso_tpdu_number
 #S7 communication consists of (at least) the following protocols:
 #COTP: ISO 8073 COTP Connection-Oriented Transport Protocol (spec. available as RFC905)
 #TPKT: RFC1006 "ISO transport services on top of the TCP: Version 3", updated by RFC2126
-#TCP: Typically, TPKT uses TCP as its transport protocol. The well known TCP port for TPKT traffic is 102.
+#TCP: Typically, TPKT uses TCP as its transport protocol. The well known TCP port for TPKT traffic is 102. Keep in mind a 3-way handshake is needed before communication takes place. To start communicating commands an S7COMM "Setup Communication" command must be negotiated as well before sending commands.
+
+"""
+### = Step7 EXAMPLES = ###
+
+#EXAMPLE - "Setup Step7 Communication Channel (after 3-way handshake)"
+#TPKT
+tpkt_version = int_to_bytes_1(3)
+tpkt_reserved = int_to_bytes_1(0)
+tpkt_spacer = int_to_bytes_1(0)
+tpkt_length = int_to_bytes_1(25)
+
+#Compile Raw part of the TPKT package
+TPKT = tpkt_version + tpkt_reserved + tpkt_spacer + tpkt_length
+
+#===================================
+#ISO_8073
+iso_length = int_to_bytes_1(2)
+iso_pdu_type = int_to_bytes_1(240)
+iso_tpdu_number = int_to_bytes_1(128)
+
+#Compile Raw part of ISO_8073 package
+ISO_8073 = iso_length + iso_pdu_type + iso_tpdu_number
+
+#===================================
+#STEP7
+s7_protocol_id = int_to_bytes_1(50)
+s7_rosctr = int_to_bytes_1(1)
+s7_red_id = int_to_bytes_2(0)
+s7_protocol_dataunit_ref = int_to_bytes_2(8449)
+s7_param_length_pt1 = int_to_bytes_1(0)
+s7_param_length_pt2 = int_to_bytes_1(8)
+s7_data_length_pt1 = int_to_bytes_1(0)
+s7_data_length_pt2 = int_to_bytes_1(0)
+s7_function = int_to_bytes_1(240)
+s7_reserved = int_to_bytes_1(0)
+s7_max_amq_calling = int_to_bytes_2(1)
+s7_max_amq_called = int_to_bytes_2(2)
+s7_pdu_length = int_to_bytes_2(240)
+
+#Compile Raw part of the Siemens S7 package
+SiemensS7 = s7_protocol_id + s7_rosctr + s7_red_id + s7_protocol_dataunit_ref + s7_param_length_pt1 + s7_param_length_pt2 + s7_data_length_pt1 + s7_data_length_pt2 + s7_function + s7_reserved + s7_max_amq_calling + s7_max_amq_called + s7_pdu_length#+ s7_item_count + s7_variable_specification + s7_length_next + s7_syntaxid + s7_transportsize + s7_length_next_address_spec + s7_db_nr + s7_area_data_blocks + s7_address_pt1 + s7_address_pt2 + s7_address_pt3 + s7_return_code + s7_transport_size + s7_item_length + s7_item_data
+
+
+#EXAMPLE - "Write data"
+#TPKT
+tpkt_version = int_to_bytes_1(3)
+tpkt_reserved = int_to_bytes_1(0)
+tpkt_spacer = int_to_bytes_1(0)
+tpkt_length = int_to_bytes_1(36)
+
+#Compile Raw part of the TPKT package
+TPKT = tpkt_version + tpkt_reserved + tpkt_spacer + tpkt_length
+
+#===================================
+#ISO_8073
+iso_length = int_to_bytes_1(2)
+iso_pdu_type = int_to_bytes_1(240)
+iso_tpdu_number = int_to_bytes_1(128)
+
+#Compile Raw part of ISO_8073 package
+ISO_8073 = iso_length + iso_pdu_type + iso_tpdu_number
+
+#===================================
+#STEP7
+s7_protocol_id = int_to_bytes_1(50)
+s7_rosctr = int_to_bytes_1(1)
+s7_red_id = int_to_bytes_2(0)
+s7_protocol_dataunit_ref1 = int_to_bytes_1(1)
+s7_protocol_dataunit_ref2 = int_to_bytes_1(2)
+s7_param_length_pt1 = int_to_bytes_1(0)
+s7_param_length_pt2 = int_to_bytes_1(14)
+s7_data_length_pt1 = int_to_bytes_1(0)
+s7_data_length_pt2 = int_to_bytes_1(5)
+s7_function = int_to_bytes_1(5)
+s7_item_count = int_to_bytes_1(1)
+#Item
+s7_variable_specification = int_to_bytes_1(18)
+s7_length_next = int_to_bytes_1(10)
+s7_syntaxid = int_to_bytes_1(16)
+s7_transportsize = int_to_bytes_1(1)
+s7_length_next_address_spec = int_to_bytes_2(1)
+s7_db_nr = int_to_bytes_2(1)
+s7_area_data_blocks = int_to_bytes_1(132)
+s7_address_pt1 = int_to_bytes_1(0)
+s7_address_pt2 = int_to_bytes_1(0)
+s7_address_pt3 = int_to_bytes_1(0)
+#Data
+s7_return_code = int_to_bytes_1(255)
+s7_transport_size = int_to_bytes_1(3)
+s7_item_length = int_to_bytes_2(1)
+s7_item_data = int_to_bytes_1(1)
+
+#Compile Raw part of the Siemens S7 package
+SiemensS7 = s7_protocol_id + s7_rosctr + s7_red_id + s7_protocol_dataunit_ref1 + s7_protocol_dataunit_ref2 + s7_param_length_pt1 + s7_param_length_pt2 + s7_data_length_pt1 + s7_data_length_pt2 + s7_function + s7_item_count + s7_variable_specification + s7_length_next + s7_syntaxid + s7_transportsize + s7_length_next_address_spec + s7_db_nr + s7_area_data_blocks + s7_address_pt1 + s7_address_pt2 + s7_address_pt3 + s7_return_code + s7_transport_size + s7_item_length + s7_item_data
+
+
+#EXAMPLE - "Read data"
+#TPKT
+tpkt_version = int_to_bytes_1(3)
+tpkt_reserved = int_to_bytes_1(0)
+tpkt_spacer = int_to_bytes_1(0)
+tpkt_length = int_to_bytes_1(31)
+
+#Compile Raw part of the TPKT package
+TPKT = tpkt_version + tpkt_reserved + tpkt_spacer + tpkt_length
+
+#===================================
+#ISO_8073
+iso_length = int_to_bytes_1(2)
+iso_pdu_type = int_to_bytes_1(240)
+iso_tpdu_number = int_to_bytes_1(128)
+
+#Compile Raw part of ISO_8073 package
+ISO_8073 = iso_length + iso_pdu_type + iso_tpdu_number
+
+#===================================
+#STEP7
+s7_protocol_id = int_to_bytes_1(50)
+s7_rosctr = int_to_bytes_1(1)
+s7_red_id = int_to_bytes_2(0)
+s7_protocol_dataunit_ref = int_to_bytes_2(258)
+s7_param_length_pt1 = int_to_bytes_1(0)
+s7_param_length_pt2 = int_to_bytes_1(14)
+s7_data_length_pt1 = int_to_bytes_1(0)
+s7_data_length_pt2 = int_to_bytes_1(0)
+s7_function = int_to_bytes_1(4)
+s7_item_count = int_to_bytes_1(1)
+#Item
+s7_variable_specification = int_to_bytes_1(18)
+s7_length_next = int_to_bytes_1(10)
+s7_syntaxid = int_to_bytes_1(16)
+s7_transportsize = int_to_bytes_1(1)
+s7_length_next_address_spec = int_to_bytes_2(1)
+s7_db_nr = int_to_bytes_2(1)
+s7_area_data_blocks = int_to_bytes_1(132)
+s7_address_pt1 = int_to_bytes_1(0)
+s7_address_pt2 = int_to_bytes_1(0)
+s7_address_pt3 = int_to_bytes_1(0)
+
+#Compile Raw part of the Siemens S7 package
+SiemensS7 = s7_protocol_id + s7_rosctr + s7_red_id + s7_protocol_dataunit_ref + s7_param_length_pt1 + s7_param_length_pt2 + s7_data_length_pt1 + s7_data_length_pt2 + s7_function + s7_item_count + s7_variable_specification + s7_length_next + s7_syntaxid + s7_transportsize + s7_length_next_address_spec + s7_db_nr + s7_area_data_blocks + s7_address_pt1 + s7_address_pt2 + s7_address_pt3
+"""
 
 #Header
 #Protocol (S7) identifier
 s7_protocol_id = int_to_bytes_1(50)
 #Remote Operating Service Control - Message type. 1 = 0x01-Job Request (send by the master (e.g. read/write memory, read/write blocks, start/stop device, setup communication)) - 2 = 0x02-Ack: simple acknowledgement sent by the slave with no data field - 3 = 0x03-Ack-Data: acknowledgement with optional data field, contains the reply to a job request - 7 = 0x07-Userdata: an extension of the original protocol, the parameter field contains the request/response id, (used for programming/debugging, SZL reads, security functions, time setup, cyclic read..)
-s7_rosctr = int_to_bytes_1(3)
-s7_red_id_pt1 = int_to_bytes_1(0)
-s7_red_id_pt2 = int_to_bytes_1(0)
+s7_rosctr = int_to_bytes_1(1)
+#Value that will always be 0
+s7_red_id = int_to_bytes_2(0)
 #Reference ID Used to Link Requests to Responses. Generated by the master, incremented with each new transmission, used to link responses to their requests. The PLC just copies it to the reply
-s7_protocol_dataunit_ref = int_to_bytes_2(520)
+s7_protocol_dataunit_ref = int_to_bytes_2(8449)
 #The length of the parameter field, Big-Endian
 s7_param_length_pt1 = int_to_bytes_1(0)
-s7_param_length_pt2 = int_to_bytes_1(2)
+s7_param_length_pt2 = int_to_bytes_1(8)
 #The length of the data field, Big-Endian
 s7_data_length_pt1 = int_to_bytes_1(0)
-s7_data_length_pt2 = int_to_bytes_1(1)
+s7_data_length_pt2 = int_to_bytes_1(0)
+#Parameter (if needed) - 5 is Write Var - 240 = Setup Communication
+s7_function = int_to_bytes_1(240)
+#Always 0
+s7_reserved = int_to_bytes_1(0)
+#Define how many unacknowledged requests a PLC (Callee) is able to accept from a client (Caller)
+s7_max_amq_calling = int_to_bytes_2(1)
+#Define how many unacknowledged requests the PLC (Callee) has accepted from the client (Caller)
+s7_max_amq_called = int_to_bytes_2(2)
+#Proposed PDU (Protocol Data Unit) Size
+s7_pdu_length = int_to_bytes_2(240)
+
+#Use below only when needed
+"""
+#The numbers of items
+s7_item_count = int_to_bytes_1(1)
+#This field determines the main type of the item struct, for read/write messages it always has the value 0x12 which stands for Variable Specification.
+s7_variable_specification = int_to_bytes_1(18)
+#This field determines the addressing mode and the format of the rest of the item structure. It has the constant value of 0x10 (16 decimal) for the any-type addressing.
+s7_syntaxid = int_to_bytes_1(16)
+#The type of the variable determines its length and how it should be interpreted. 
+#BIT:[X] a single bit.
+#WORD: two bytes wide unsigned integer.
+#DINT: four bytes wide signed integer.
+#REAL: four bytes wide IEEE floating point number.
+#COUNTER: counter type used by the PLC program counters.
+#An example address of a variable is "DB123X 2.1" which accesses the second bit (1) of the third byte (2) of the Data Block 123. In that case this value will be "1" = BIT.
+s7_transportsize = int_to_bytes_1(1)
+#Length of the following parameters that form the address
+s7_length_next_address_spec = int_to_bytes_2(1)
+#The database that is being targets. Usually there is 1 database.
+s7_db_nr = int_to_bytes_2(1)
+#Defines the type of memory area
+#0x03 - System info of S200 family
+#0x05 - System flags of S200 family
+#0x06 - Analog inputs of S200 family
+#0x07 - Analog outputs of S200 family
+#0x1C - S7 counters (C)
+#0x1D - S7 timers (T)
+#0x1E - IEC counters (200 family)
+#0x1F - IEC timers (200 family)
+#0x80 - Direct peripheral access (P)
+#0x81 - Inputs (I)
+#0x82 - Outputs (Q)
+#0x83 - Flags (M) (Merker)
+#0x84 - Data blocks (DB)
+#0x85 - Instance data blocks (DI)
+#0x86 - Local data (L)
+#0x87 - Unknown yet (V)
+s7_area_data_blocks = int_to_bytes_1(132)
+#contains the offset of the addressed variable in the selected memory area. Essentially, the addresses are translated to bit offsets and encoded on 3 bytes in network (big endian) byte order. In practice, the most significant 5 bits are never used since the address space is smaller than that. As an example DBX40.3 would be 0x000143 which is 40 * 8 + 3.
+s7_address_pt1 = int_to_bytes_1(0)
+s7_address_pt2 = int_to_bytes_1(0)
+s7_address_pt3 = int_to_bytes_1(0)
+#Data
+#Tells if data is being returned or not. 0xFF means ok, data follows after this header. Other codes give reasons why no data is returned.
+s7_return_code = int_to_bytes_1(255)
+#Size of the next transport block
+s7_transport_size = int_to_bytes_1(3)
+#Size of the data
+s7_item_length = int_to_bytes_2(1)
+#The final data / values
+s7_item_data = int_to_bytes_1(1)
+
+#For setting up a communication channel
+#Always set to 0
+s7_reserved = int_to_bytes_1(0)
+#Define how many unacknowledged requests a PLC (Callee) is able to accept from a client (Caller)
+s7_max_amq_calling = int_to_bytes_2(1)
+#Define how many unacknowledged requests the PLC (Callee) has accepted from the client (Caller)
+s7_max_amq_called = int_to_bytes_2(2)
+#Proposed PDU (Protocol Data Unit) Size
+s7_pdu_length = int_to_bytes_2(240)
+
 #Only present in the Ack-Data messages, the possible error constants are listed in the constants.txt (http://gmiru.com/resources/s7proto/constants.txt)
 s7_error_class = int_to_bytes_1(0)
 #Only present in the Ack-Data messages, the possible error constants are listed in the constants.txt (http://gmiru.com/resources/s7proto/constants.txt)
@@ -361,15 +609,53 @@ s7_item_count = int_to_bytes_1(1)
 #Data - This structure is used to address the actual variables, its length and fields depend on the type of addressing being used. These items are only present in the Job request and are emitted from the corresponding Ack Data no matter what the addressing mode is or whether it is a read or write request.
 s7_item = int_to_bytes_1(255)
 
-#Compile Raw part of the Siemens S7 package
-SiemensS7 = s7_protocol_id + s7_rosctr + s7_red_id_pt1 + s7_red_id_pt2 + s7_protocol_dataunit_ref + s7_param_length_pt1 + s7_param_length_pt2 + s7_data_length_pt1 + s7_data_length_pt2 + s7_error_class + s7_error_code + s7_function + s7_item_count + s7_item
+#When reading a variable
+#This field determines the addressing mode and the format of the rest of the item structure. It has the constant value of 0x10 (16 decimal) for the any-type addressing.
+s7_syntaxid = int_to_bytes_1(16)
+#The type of the variable determines its length and how it should be interpreted. 
+#BIT:[X] a single bit.
+#WORD: two bytes wide unsigned integer.
+#DINT: four bytes wide signed integer.
+#REAL: four bytes wide IEEE floating point number.
+#COUNTER: counter type used by the PLC program counters.
+#An example address of a variable is "DB123X 2.1" which accesses the second bit (1) of the third byte (2) of the Data Block 123. In that case this value will be "1" = BIT.
+s7_transportsize = int_to_bytes_1(1)
+#Length of the following parameters that form the address
+s7_length_next_address_spec = int_to_bytes_2(1)
+#The database that is being targets. Usually there is 1 database.
+s7_db_nr = int_to_bytes_2(1)
+#Defines the type of memory area
+#0x03 - System info of S200 family
+#0x05 - System flags of S200 family
+#0x06 - Analog inputs of S200 family
+#0x07 - Analog outputs of S200 family
+#0x1C - S7 counters (C)
+#0x1D - S7 timers (T)
+#0x1E - IEC counters (200 family)
+#0x1F - IEC timers (200 family)
+#0x80 - Direct peripheral access (P)
+#0x81 - Inputs (I)
+#0x82 - Outputs (Q)
+#0x83 - Flags (M) (Merker)
+#0x84 - Data blocks (DB)
+#0x85 - Instance data blocks (DI)
+#0x86 - Local data (L)
+#0x87 - Unknown yet (V)
+s7_area_data_blocks = int_to_bytes_1(132)
+#contains the offset of the addressed variable in the selected memory area. Essentially, the addresses are translated to bit offsets and encoded on 3 bytes in network (big endian) byte order. In practice, the most significant 5 bits are never used since the address space is smaller than that. As an example DBX40.3 would be 0x000143 which is 40 * 8 + 3.
+s7_address_pt1 = int_to_bytes_1(0)
+s7_address_pt2 = int_to_bytes_1(0)
+s7_address_pt3 = int_to_bytes_1(0)
+"""
 
+
+#Compile Raw part of the Siemens S7 package
+SiemensS7 = s7_protocol_id + s7_rosctr + s7_red_id + s7_protocol_dataunit_ref + s7_param_length_pt1 + s7_param_length_pt2 + s7_data_length_pt1 + s7_data_length_pt2 + s7_function + s7_reserved + s7_max_amq_calling + s7_max_amq_called + s7_pdu_length#+ s7_item_count + s7_variable_specification + s7_length_next + s7_syntaxid + s7_transportsize + s7_length_next_address_spec + s7_db_nr + s7_area_data_blocks + s7_address_pt1 + s7_address_pt2 + s7_address_pt3 + s7_return_code + s7_transport_size + s7_item_length + s7_item_data
 
 ######## DEFINE THE CUSTOM PAYLOAD (RAW PACKAGE) ########
 
 #Payload - Define what protocol to send as raw data
 payload =  TPKT + ISO_8073 + SiemensS7 #Profinet 
-
 
 ######## REGULAR PACKET LAYERS (NONRAW) ########
 
@@ -413,34 +699,30 @@ l4 = TCP(sport=source_port,
 l1 = Ether(dst=destination_mac,
         src=source_mac,
         #Profinet = 0x8892 (34962 in decimal) - Note that “Profinet cyclic realtime” and “Profinet acyclic realtime” run directly on Ethernet layer 2 (they do not use IP or UDP), so no manual l2 or l3.
-        type=34962
+        #type=34962
      )
 #IP
-l3 = IP(version=4, 
-        ihl=5,
-        tos=0x0,
-        len=62,
-        id=231,
-        flags='',
-        frag=0,
-        ttl=255,
-        proto='tcp',
-        chksum=0xd4d3,
+l3 = IP(#version=4,
+        flags=2,
+        proto=6,
+        #id=8000,
         src=source_ip,
         dst=destination_ip
      )
 #TCP
+#tcp_options = [("MSS" , 1460),('Timestamp', (1098453, 0)),("NOP",None),("WScale",2),("NOP",None),("NOP",None),("SAckOK","")]
+tcp_options = [("MSS" , 1460),("SAckOK",""),('Timestamp', (4294901862, 0)),("NOP",None),("WScale",0)]
 l4 = TCP(sport=source_port,
         dport=destination_port,
-        seq=19179,
-        ack=1416649709,
-        dataofs=5,
-        reserved=0,
+        #seq=920,
+        #ack=570,
+        #dataofs=5,
+        #reserved=0,
         flags='PA',
-        window=3150,
-        chksum=0x9cba,
+        #window=3151,
+        #chksum=0x9cbc,
         urgptr=0,
-        options=[]
+        #options=tcp_options
      )
 #RAW
 lRaw = raw = Raw(load = payload)
