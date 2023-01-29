@@ -9,6 +9,8 @@
 
 #This file act as a master file for defining all kinds of different ICS/SCADA (IA/PA/IoT) protocol packet segments and some explanations. This file is not constructed to deal with packet streams, like conducting the 3-way handshake. Look for case-specific examples in this repo if you need an example on how to use this knowledge in combination with different scenarios.
 
+
+
 ######## IMPORTS ########
 from scapy.all import *
 import struct
