@@ -9,7 +9,9 @@
 
 #This file act as a master file for defining all kinds of different ICS/SCADA (IA/PA/IoT) protocol packet segments and some explanations. This file is not constructed to deal with packet streams, like conducting the 3-way handshake. Look for case-specific examples in this repo if you need an example on how to use this knowledge in combination with different scenarios.
 
-
+#Tip:
+#Convert a long hex string to bytes: 
+#codecs.decode('505f50524f4752414d', 'hex_codec')
 
 ######## IMPORTS ########
 from scapy.all import *
@@ -540,7 +542,7 @@ s7_param_length_pt2 = int_to_bytes_1(8)
 #The length of the data field, Big-Endian
 s7_data_length_pt1 = int_to_bytes_1(0)
 s7_data_length_pt2 = int_to_bytes_1(0)
-#Parameter (if needed) - 5 is Write Var - 240 = Setup Communication
+#Parameter (if needed) - 4 = Read Var - 5 = Write Var - 26 = Request Download - 27 = Download block - 28 = Download Ended - 29 = Start Upload - 30 = Upload - 31 = End Upload - 40 = PI Service - 41 = PLC Stop - 240 = Setup Communication
 s7_function = int_to_bytes_1(240)
 #Always 0
 s7_reserved = int_to_bytes_1(0)
