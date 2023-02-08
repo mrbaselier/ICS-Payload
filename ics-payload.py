@@ -7,7 +7,7 @@
 # This software may be modified and distributed under the terms
 # of the "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0) license. https://creativecommons.org/licenses/by-nc-sa/4.0/.
 
-#This file act as a master file for defining all kinds of different ICS/SCADA (IA/PA/IoT) protocol packet segments and some explanations. This file is not constructed to deal with packet streams, like conducting the 3-way handshake. Look for case-specific examples in this repo if you need an example on how to use this knowledge in combination with different scenarios.
+#This file acts as a master file for defining all kinds of different ICS/SCADA (IA/PA/IoT) protocol packet segments and some explanations. This file is not constructed to deal with packet streams, like conducting the 3-way handshake. Look for case-specific examples in this repo if you need an example on how to use this knowledge in combination with different scenarios.
 
 #Tip:
 #Convert a long hex string to bytes: 
