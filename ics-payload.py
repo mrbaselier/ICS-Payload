@@ -211,8 +211,8 @@ profinet_block_dcpblocklength = int_to_bytes_2(0)
 #Compile Raw part of Profinet package
 Profinet = profinet_frameid + profinet_serviceId + profinet_serviceType + profinet_xid_1 + profinet_xid_2 + profinet_xid_3 + profinet_xid_4 + profinet_reserved + profinet_dcpdatalength + profinet_block_option_control + profinet_block_suboption_signal + profinet_block_dcpblocklength
 
+### = END Profinet EXAMPLES = ###
 """
-
 
 #FrameID values:
 #8000 = 32768 decimal = Profinet cyclic - Output CR
@@ -298,6 +298,129 @@ Profinet = profinet_frameid + profinet_serviceId + profinet_serviceType + profin
 
 
 #=========================================================
+#MODBUS
+#https://ipc2u.com/articles/knowledge-base/detailed-description-of-the-modbus-tcp-protocol-with-command-examples/
+
+#The Modbus TCP command consists of a portion of the Modbus RTU message and a special header. From the Modbus RTU message, the SlaveID address at the beginning and the CRC checksum at the end are removed, which forms the PDU, the Protocol Data Unit. 
+
+
+"""
+### = Modbus EXAMPLES = ###
+
+#First, perform a valid 3-way handshake
+#End the TCP stream with a FIN or RST command
+
+#EXAMPLE - Write Multiple Coils
+
+modbus_transaction_id1 = int_to_bytes_1(0)
+modbus_transaction_id2 = int_to_bytes_1(transid)
+modbus_protocol_id = int_to_bytes_2(0)
+modbus_length = int_to_bytes_2(8)
+modbus_unit_identifier = int_to_bytes_1(0)
+modbus_function_code = int_to_bytes_1(15)
+modbus_reference_number = int_to_bytes_2(0)
+modbus_bit_count = int_to_bytes_2(8)
+modbus_byte_count = int_to_bytes_1(1)
+modbus_data = int_to_bytes_1(1)
+
+#Compile Raw part of Modbus/TCP package
+Modbus = modbus_transaction_id1 + modbus_transaction_id2 + modbus_protocol_id + modbus_length + modbus_unit_identifier + modbus_function_code + modbus_reference_number + modbus_bit_count + modbus_byte_count + modbus_data
+
+
+#EXAMPLE - Read Input Registers
+
+modbus_transaction_id1 = int_to_bytes_1(0)
+modbus_transaction_id2 = int_to_bytes_1(transid)
+modbus_protocol_id = int_to_bytes_2(0)
+modbus_length = int_to_bytes_2(6)
+modbus_unit_identifier = int_to_bytes_1(0)
+modbus_function_code = int_to_bytes_1(4)
+modbus_reference_number = int_to_bytes_2(0)
+modbus_word_count = int_to_bytes_2(1)
+
+#Compile Raw part of Modbus/TCP package
+Modbus = modbus_transaction_id1 + modbus_transaction_id2 + modbus_protocol_id + modbus_length + modbus_unit_identifier + modbus_function_code + modbus_reference_number + modbus_word_count
+
+
+#EXAMPLE - Write Multiple Registers
+modbus_transaction_id1 = int_to_bytes_1(0)
+modbus_transaction_id2 = int_to_bytes_1(transid)
+modbus_protocol_id = int_to_bytes_2(0)
+modbus_length = int_to_bytes_2(9)
+modbus_unit_identifier = int_to_bytes_1(0)
+modbus_function_code = int_to_bytes_1(16)
+modbus_reference_number = int_to_bytes_2(0)
+modbus_word_count = int_to_bytes_2(1)
+modbus_byte_count = int_to_bytes_1(2)
+register = int_to_bytes_2(0)
+
+#Compile Raw part of Modbus/TCP package
+Modbus = modbus_transaction_id1 + modbus_transaction_id2 + modbus_protocol_id + modbus_length + modbus_unit_identifier + modbus_function_code + modbus_reference_number + modbus_word_count + modbus_byte_count + register
+
+
+#EXAMPLE - Read Discrete Inputs
+modbus_transaction_id1 = int_to_bytes_1(0)
+modbus_transaction_id2 = int_to_bytes_1(transid)
+modbus_protocol_id = int_to_bytes_2(0)
+modbus_length = int_to_bytes_2(6)
+modbus_unit_identifier = int_to_bytes_1(0)
+modbus_function_code = int_to_bytes_1(2)
+modbus_reference_number = int_to_bytes_2(0)
+modbus_bit_count = int_to_bytes_2(8)
+
+#Compile Raw part of Modbus/TCP package
+Modbus = modbus_transaction_id1 + modbus_transaction_id2 + modbus_protocol_id + modbus_length + modbus_unit_identifier + modbus_function_code + modbus_reference_number + modbus_bit_count
+
+### = END Modbus EXAMPLES = ###
+"""
+
+#Transaction identifier - Stream counter - The actual use for the transaction identifier is for synchronization between messages of server and client. This function is not always implemented.
+modbus_transaction_id1 = int_to_bytes_1(0)
+modbus_transaction_id2 = int_to_bytes_1(transid)
+#Protocol Identifier, set by the master. Will always be 0.
+modbus_protocol_id = int_to_bytes_2(0)
+#The number of bytes in the message that follows. It is counted from Unit Identifier to the end of the message. 
+modbus_length = int_to_bytes_2(8)
+#The unit ID is used when dealing with Modbus Bridges. Typical bridges convert Modbus TCP to Modbus serial or Modbus plus. The Unit ID is either the device Id of serial device or it is index number that references a Modbus plus layered address. Most traditional Modbus/TCP devices ignore the unit Id completely. This value is usually 0. This ID is also referred to as the SlaveID.
+modbus_unit_identifier = int_to_bytes_1(0)
+#Modbus
+#1 = Read Coils - 2 = Read Discrete Inputs - 4 = Read Input Registers - 5 = Write Single Coil - 6 = Write Single Register - 7 = Read Exception Status (serial=only) - 15 = Write Multiple Coils - 16 = Write Multiple Registers - 20 = Read File Record - 21 = Write File Record - 22 = Mask Write Register - 23 = Read/Write Multiple Registers - 24 = Read FIFO
+modbus_function_code = int_to_bytes_1(15)
+#Address of the first byte in Hi register
+modbus_reference_number = int_to_bytes_2(0)
+
+#Use option when needed. When not needed, keep commented-out
+
+#Write Multiple Coils
+#The number registers in Lo Byte
+#modbus_bit_count = int_to_bytes_2(8)
+#The number of bytes that follows
+#modbus_byte_count = int_to_bytes_1(1)
+#The data to be written to the coil. Least signaficant is first coil. Coil 1 = 1, 2 = 2, 3 = 4, 4 = 8, 5 = 16, 6 = 32 etc.
+#modbus_data = int_to_bytes_1(1)
+
+#Read Input Registers
+#The number of words to read
+#modbus_word_count = int_to_bytes_2(1)
+
+#Write Multiple Registers
+#The number of words to write
+#modbus_word_count = int_to_bytes_2(1)
+#The number of bytes that follows
+#modbus_byte_count = int_to_bytes_1(2)
+##Register
+#register_number = int_to_bytes_1(0)
+#register_value = int_to_bytes_1(0)
+
+#Read Discrete Inputs
+#The number of bit values to be returned
+#modbus_bit_count = int_to_bytes_2(8)
+
+#Compile Raw part of Modbus/TCP package
+Modbus = modbus_transaction_id1 + modbus_transaction_id2 + modbus_protocol_id + modbus_length + modbus_unit_identifier + modbus_function_code + modbus_reference_number
+
+
+#=========================================================
 #TPKT
 #TPKT is officially defined as "ISO Transport Service on top of the TCP." "TCP" and "ISO" relate to two rival suites of networking protocols. TPKT enables translation between these two groups.
 #TPKT is an "encapsulation" protocol. It carries the OSI packet in its own packet's data payload and then passes the resulting structure to TCP, from then on, the packet is processed as a TCP/IP packet. The OSI programs passing data to TPKT are unaware that their data will be carried over TCP/IP because TPKT emulates the OSI protocol Transport Service Access Point (TSAP).
@@ -363,7 +486,7 @@ ISO_8073 = iso_length + iso_pdu_type + iso_tpdu_number + iso_dest_ref + iso_src_
 
 
 #=========================================================
-#SiemansS7
+#SiemensS7
 #https://packages.zeek.org/packages/view/ae81d07d-389a-11ed-ba82-0a598146b5c6
 #http://gmiru.com/article/s7comm/
 #http://gmiru.com/article/s7comm-part2/
@@ -386,6 +509,9 @@ ISO_8073 = iso_length + iso_pdu_type + iso_tpdu_number + iso_dest_ref + iso_src_
 
 """
 ### = Step7 EXAMPLES = ###
+
+#First perform a valid 3-way handshake
+#Close the TCP stream with a FIN or RST package
 
 #EXAMPLE - "Setup Step7 Communication Channel (after 3-way handshake)"
 #TPKT
@@ -524,6 +650,8 @@ s7_address_pt3 = int_to_bytes_1(0)
 
 #Compile Raw part of the Siemens S7 package
 SiemensS7 = s7_protocol_id + s7_rosctr + s7_red_id + s7_protocol_dataunit_ref + s7_param_length_pt1 + s7_param_length_pt2 + s7_data_length_pt1 + s7_data_length_pt2 + s7_function + s7_item_count + s7_variable_specification + s7_length_next + s7_syntaxid + s7_transportsize + s7_length_next_address_spec + s7_db_nr + s7_area_data_blocks + s7_address_pt1 + s7_address_pt2 + s7_address_pt3
+
+### = END Step7 EXAMPLES = ###
 """
 
 
@@ -673,7 +801,7 @@ SiemensS7 = s7_protocol_id + s7_rosctr + s7_red_id + s7_protocol_dataunit_ref + 
 ######## DEFINE THE CUSTOM PAYLOAD (RAW PACKAGE) ########
 
 #Payload - Define what protocol to send as raw data
-payload =  TPKT + ISO_8073 + SiemensS7 #Profinet 
+payload =  TPKT + ISO_8073 + SiemensS7 + Profinet + Modbus
 
 
 
