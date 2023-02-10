@@ -300,9 +300,26 @@ Profinet = profinet_frameid + profinet_serviceId + profinet_serviceType + profin
 #=========================================================
 #MODBUS
 #https://ipc2u.com/articles/knowledge-base/detailed-description-of-the-modbus-tcp-protocol-with-command-examples/
+#https://en.wikipedia.org/wiki/Modbus
+#https://jarnobaselier.nl/hoe-werkt-modbus/
 
 #The Modbus TCP command consists of a portion of the Modbus RTU message and a special header. From the Modbus RTU message, the SlaveID address at the beginning and the CRC checksum at the end are removed, which forms the PDU, the Protocol Data Unit. 
 
+#A Modbus register is actully 1 memory chuck existing out of 4 components/tables.
+#>Discrete Output Coils (R/W)
+#>Discrete Input Coils (read-only)
+#>Analog Input Registers (read-only measurements and statuses)
+#>Analog Output Holding Registers (R/W configuration values)
+
+#A "coil" contains a on/off (boolean) value. A coil value is 1 bit and is assigned a data address between 0 and 9998 (270E in hex)
+#A "register" contains a numerical Value in the form of a "word". This is a 16 bits (2 byte) value
+
+#The addressing of these values is done by giving an offset. Each device has a range of these table that depends on the size of the memory. Sometimes it's common for values to overlap eachother. A common example is:
+
+#>1-9999 - Discrete Output Coils
+#>10001-19999 - Discrete Input Coils
+#>30001-39999 - Analog Input Registers
+#>4001-49999 - Analog Output Holding Registers
 
 """
 ### = Modbus EXAMPLES = ###
@@ -384,7 +401,7 @@ modbus_length = int_to_bytes_2(8)
 #The unit ID is used when dealing with Modbus Bridges. Typical bridges convert Modbus TCP to Modbus serial or Modbus plus. The Unit ID is either the device Id of serial device or it is index number that references a Modbus plus layered address. Most traditional Modbus/TCP devices ignore the unit Id completely. This value is usually 0. This ID is also referred to as the SlaveID.
 modbus_unit_identifier = int_to_bytes_1(0)
 #Modbus
-#1 = Read Coils - 2 = Read Discrete Inputs - 4 = Read Input Registers - 5 = Write Single Coil - 6 = Write Single Register - 7 = Read Exception Status (serial=only) - 15 = Write Multiple Coils - 16 = Write Multiple Registers - 20 = Read File Record - 21 = Write File Record - 22 = Mask Write Register - 23 = Read/Write Multiple Registers - 24 = Read FIFO
+#1 = Read Coils - 2 = Read Discrete Inputs - 3 = Read Multiple Holding Registers - 4 = Read Input Registers - 5 = Write Single Coil - 6 = Write Single Register - 7 = Read Exception Status (serial=only) - 8 = Diagnostic - 11 = Get Com Event Counter - 12 = Get Com Event Log - 15 = Write Multiple Coils - 16 = Write Multiple Registers - 17 = Report Server ID - 20 = Read File Record - 21 = Write File Record - 22 = Mask Write Register - 23 = Read/Write Multiple Registers - 24 = Read FIFO - 43 = Read Device Identification/Encapsulated Interface Transport
 modbus_function_code = int_to_bytes_1(15)
 #Address of the first byte in Hi register
 modbus_reference_number = int_to_bytes_2(0)
